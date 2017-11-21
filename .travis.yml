@@ -1,0 +1,28 @@
+language: go
+go:
+  - 1.8.x
+
+go_import_path: github.com/lubinsz/libnetwork
+
+# `make ci` uses Docker.
+sudo: required
+services:
+  - docker
+
+env:
+  global:
+    - BUILDTAGS="seccomp apparmor selinux ambient"
+
+before_install:
+  - echo "deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libapparmor-dev libseccomp-dev/trusty-backports
+  - go get -u github.com/golang/lint/golint
+  - go get -u github.com/vbatts/git-validation
+  - sudo modprobe ip_vs
+  - env | grep TRAVIS_
+
+script:
+  - git-validation -run DCO,short-subject -v
+  - make build 
+  - make check 
